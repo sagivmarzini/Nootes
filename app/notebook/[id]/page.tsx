@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { PiSmileySad } from "react-icons/pi";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export default async function NotebookPage({ params }: Props) {
+export default async function NotebookPage(props: Props) {
+  const params = await props.params;
   const id = parseInt(params.id);
   const notebook = await prisma.notebook.findUnique({
     where: { id },
