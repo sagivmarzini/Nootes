@@ -118,10 +118,7 @@ export default function Notebook({ id }: Props) {
   const page = JSON.parse(notebook.summary);
 
   return (
-    <div
-      dir="rtl"
-      className="flex flex-col items-start justify-center min-h-screen p-4 text-gray-800 bg-base-100 sm:p-8"
-    >
+    <div className="flex flex-col items-start justify-center min-h-screen p-4 text-gray-800 bg-base-100 sm:p-8">
       <div
         className={
           "w-full max-w-5xl my-4 overflow-hidden border border-gray-300 rounded-lg shadow-xl bg-paper " +

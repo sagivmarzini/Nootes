@@ -49,7 +49,7 @@ export default function UploadAudio() {
         ) : (
           <BiMicrophone />
         )}
-        {isLoading ? "Loading..." : "Upload Recording"}
+        {isLoading ? "טוען..." : "העלו הקלטה"}
       </button>
       <input
         type="file"
