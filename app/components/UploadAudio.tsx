@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { BiMicrophone } from "react-icons/bi";
 
 export default function UploadAudio() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -21,17 +23,17 @@ export default function UploadAudio() {
 
     setIsLoading(true);
 
-    const response = await fetch("/api/transcribe", {
+    const response = await fetch("/api/recording", {
       method: "POST",
       body: formData,
     });
 
     const data = await response.json();
-    if (data) {
-      console.log(data.transcription);
-    } else {
-      console.error("Error:", data.error);
+    if (!data) {
+      throw new Error(data.error);
     }
+
+    router.push(`/notebook/${data.id}`);
 
     setIsLoading(false);
   };
