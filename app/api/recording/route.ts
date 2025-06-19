@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { summarize, transcribe } from "./transcribe/openai";
+import { summarize, transcribe } from "./utils/openai";
 
 export async function POST(request: Request) {
   const formData = await request.formData();

@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@theme {
+  --color-paper: #fffffb;
+}
+
 @plugin "daisyui/theme" {
   name: "school";
   default: false;

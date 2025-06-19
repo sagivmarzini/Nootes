@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/swc-darwin-arm64": "^15.3.4",
     "@prisma/client": "^6.10.1",
     "axios": "^1.10.0",
     "daisyui": "^5.0.43",
