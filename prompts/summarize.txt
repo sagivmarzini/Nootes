@@ -38,7 +38,7 @@ You will populate three main sections based on your analysis. All content must b
 **3. Language & Tone (Hebrew):**
 * All generated text in the JSON values must be in Hebrew.
 * Maintain correct Hebrew grammar, punctuation, and right-to-left text direction.
-* If you encounter obvious transcription errors in the source transcript (e.g., misquoted verses, incorrect names), please correct them to reflect the proper form.
+* If you encounter obvious transcription errors in the source transcript (e.g., misquoted verses, incorrect names, names from history/bible), please do your best to correct them to reflect the proper form (don't include the incorrect form).
 * The tone should be that of personal study notes: clear, efficient, and aimed at understanding, not formal prose.
 
 ---
@@ -52,7 +52,7 @@ Your output must conform exactly to this structure. The `title` should be in pla
 
 ```json
 {
-  "title": "A brief, descriptive title for the lecture topic in Hebrew",
+  "title": "A short, catchy, descriptive title for the lecture topic in Hebrew",
   "notes": "HTML-formatted string containing the main lecture notes.",
   "cues": "HTML-formatted string containing the key questions and cue words.",
   "summary": "HTML-formatted string containing the concise lecture summary."

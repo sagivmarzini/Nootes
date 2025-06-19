@@ -8,7 +8,6 @@ export default function UploadAudio() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
 
   const handleClick = () => {
     inputRef.current?.click();
@@ -45,8 +44,12 @@ export default function UploadAudio() {
         onClick={handleClick}
         disabled={isLoading}
       >
-        <BiMicrophone />
-        {isLoading ? "Transcribing..." : "Upload Recording"}
+        {isLoading ? (
+          <span className="loading loading-spinner" />
+        ) : (
+          <BiMicrophone />
+        )}
+        {isLoading ? "Loading..." : "Upload Recording"}
       </button>
       <input
         type="file"
@@ -55,11 +58,6 @@ export default function UploadAudio() {
         onChange={handleUpload}
         className="hidden"
       />
-      {result && (
-        <div className="mt-4 p-2 bg-base-300 rounded">
-          <p className="text-sm font-mono whitespace-pre-wrap">{result}</p>
-        </div>
-      )}
     </div>
   );
 }

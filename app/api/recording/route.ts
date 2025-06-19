@@ -22,6 +22,16 @@ export async function POST(request: Request) {
 }
 
 async function processRecording(recording: File, id: number) {
-  await transcribe(recording, id);
-  summarize(recording, id);
+  try {
+    await transcribe(recording, id);
+    await summarize(id);
+  } catch (error) {
+    console.error(error);
+    await prisma.notebook.update({
+      where: { id },
+      data: {
+        status: "failed",
+      },
+    });
+  }
 }
