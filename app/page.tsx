@@ -1,6 +1,7 @@
+import { getUserSession } from "@/lib/session";
 import UploadAudio from "./components/UploadAudio";
 
-export default function Home() {
+export default async function Home() {
   return (
     <main>
       <div className="min-h-screen hero bg-base-200">
