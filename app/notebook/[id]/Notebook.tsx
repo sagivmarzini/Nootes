@@ -29,6 +29,18 @@ type Notebook = {
   updatedAt: Date;
 };
 
+function statusToHebrew(status: $Enums.NotebookStatus): string {
+  switch (status) {
+    case "transcribing":
+      return "מתמלל";
+    case "summarizing":
+      return "מסכם";
+
+    default:
+      return status;
+  }
+}
+
 export default function Notebook({ id }: Props) {
   const [notebook, setNotebook] = useState<Notebook | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +83,7 @@ export default function Notebook({ id }: Props) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <span className="loading loading-ring loading-xl"></span>
-        <span>We're looking for your notebook...</span>
+        <span>מחפשים את המחברת שלך...</span>
       </div>
     );
   }
@@ -83,9 +95,9 @@ export default function Notebook({ id }: Props) {
           <h1 className="flex flex-col items-center gap-2 text-xl font-semibold">
             <BiX className="text-6xl" />
             <span>
-              Sorry, the process failed.
+              סליחה, התהליך נכשל
               <br />
-              Please try again.
+              אנא נסו שוב
             </span>
           </h1>
         </div>
@@ -99,7 +111,7 @@ export default function Notebook({ id }: Props) {
         <div className="text-center hero-content">
           <h1 className="flex flex-col items-center gap-4 text-xl font-semibold">
             <PiSmileySad className="text-6xl" />
-            <span>Sorry, we couldn't find your notebook</span>
+            <span>המחברת שלך לא נמצאת בשום מקום</span>
           </h1>
         </div>
       </div>
@@ -110,7 +122,7 @@ export default function Notebook({ id }: Props) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <span className="loading loading-infinity loading-xl" />
-        <span>{notebook.status}...</span>
+        <span>{statusToHebrew(notebook.status)}...</span>
       </div>
     );
   }
@@ -118,10 +130,10 @@ export default function Notebook({ id }: Props) {
   const page = JSON.parse(notebook.summary);
 
   return (
-    <div className="flex flex-col items-start justify-center min-h-screen p-4 text-gray-800 bg-base-100 sm:p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 text-gray-800 bg-base-100 sm:p-8">
       <div
         className={
-          "w-full max-w-5xl my-4 overflow-hidden border border-gray-300 rounded-lg shadow-xl bg-paper " +
+          "w-full max-w-4xl my-4 overflow-hidden border border-gray-300 rounded-lg shadow-xl bg-paper " +
           gveretLevin.className
         }
       >
