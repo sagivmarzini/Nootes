@@ -9,7 +9,7 @@ export default async function Home() {
           <div className="max-w-md text-balance">
             <h1 className="flex flex-col gap-2 text-3xl font-bold">
               <div>לא מצליחים גם להקשיב וגם לסכם?</div>
-              <span className="text-5xl font-black text-transparent drop-shadow-md inline-blockfont-bold bg-gradient-to-r from-purple-400 to-secondary bg-clip-text">
+              <span className="inline-block text-5xl font-black text-transparent drop-shadow-md bg-gradient-to-r from-purple-600 to-secondary bg-clip-text">
                 תנו ל־AI לעשות את זה בשבילכם
               </span>
             </h1>

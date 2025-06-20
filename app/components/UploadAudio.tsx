@@ -1,42 +1,40 @@
 "use client";
 
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { BiMicrophone, BiX } from "react-icons/bi";
+import { BiInfoCircle, BiMicrophone, BiX } from "react-icons/bi";
 
 export default function UploadAudio() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { data: session, status } = useSession();
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleClick = () => {
     setError(null); // Clear any existing errors
+    if (status !== "authenticated") {
+      signIn("google", { callbackUrl: "/" });
+      return;
+    }
     inputRef.current?.click();
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
-    // Check if no file was selected
     if (!file) {
-      setError("לא נבחר קובץ שמע. אנא בחרו קובץ שמע תקין.");
+      setError("לא הועלה קובץ.");
       return;
     }
-
-    // Validate file type
-    if (!file.type.startsWith("audio/")) {
-      setError("הקובץ שנבחר אינו קובץ שמע תקין. אנא בחרו קובץ שמע.");
+    if (!validateFileInput(file)) {
       return;
     }
+    submitAudioFile(file);
+  };
 
-    // Optional: Check file size (e.g., max 50MB)
-    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-    if (file.size > maxSize) {
-      setError("הקובץ גדול מדי. גודל מקסימלי: 50MB.");
-      return;
-    }
-
+  async function submitAudioFile(file: File) {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -63,7 +61,28 @@ export default function UploadAudio() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
+
+  function validateFileInput(file: File) {
+    // Check if no file was selected
+    if (!file) {
+      setError("לא נבחר קובץ שמע. אנא בחרו קובץ שמע תקין.");
+      return false;
+    }
+    // Validate file type
+    if (!file.type.startsWith("audio/")) {
+      setError("הקובץ שנבחר אינו קובץ שמע תקין. אנא בחרו קובץ שמע.");
+      return false;
+    }
+    // Check file size (e.g., max 25MB)
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+    if (file.size > maxSize) {
+      setError("הקובץ גדול מדי. גודל מקסימלי: 25MB.");
+      return false;
+    }
+
+    return true;
+  }
 
   const dismissError = () => {
     setError(null);
@@ -108,8 +127,19 @@ export default function UploadAudio() {
         ) : (
           <BiMicrophone />
         )}
-        {isLoading ? "טוען..." : "העלו הקלטה"}
+        {isLoading
+          ? "טוען..."
+          : status !== "authenticated"
+          ? "התחברות והעלאת הקלטה"
+          : "העלו הקלטה"}{" "}
       </button>
+      {status !== "authenticated" && (
+        <div className="flex items-center justify-center w-full gap-1 text-sm text-center text-gray-500">
+          <span className="max-w-xs">
+            השימוש חינמי, אך העלאת הקלטה דורשת התחברות לחשבון Google שלך.
+          </span>
+        </div>
+      )}
 
       {/* Hidden File Input */}
       <input

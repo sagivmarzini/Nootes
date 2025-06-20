@@ -1,11 +1,11 @@
 "use client";
 
-import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function AuthButton() {
   const { data: session } = useSession();
 
-  if (session?.user) {
+  if (session) {
     return (
       <>
         <button className="btn btn-secondary" onClick={() => signOut()}>
@@ -18,7 +18,7 @@ export default function AuthButton() {
   return (
     <button
       className="btn bg-white text-black border-[#e5e5e5]"
-      onClick={() => signIn("google")}
+      onClick={() => signIn("google", { callbackUrl: "/" })}
     >
       <svg
         aria-label="Google logo"
@@ -47,7 +47,7 @@ export default function AuthButton() {
           ></path>
         </g>
       </svg>
-      התחברות עם גוגל{" "}
+      התחברות עם גוגל
     </button>
   );
 }

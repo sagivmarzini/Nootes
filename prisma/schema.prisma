@@ -23,22 +23,25 @@ enum NotebookStatus {
 }
 
 model Notebook {
-  id            Int             @id @default(autoincrement())
-  status        NotebookStatus  @default(pending)
-  transcription String?         // null at first, filled later
-  summary       String?         // optional, filled later
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id            Int            @id @default(autoincrement())
+  status        NotebookStatus @default(pending)
+  transcription String? // null at first, filled later
+  summary       String? // optional, filled later
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id])
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  name           String?
-  image          String? // profile pic from OAuth or uploaded
-  password       String? // optional if using OAuth only
-  emailVerified  DateTime? // useful for verification flow
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  deletedAt      DateTime? // soft delete
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String?
+  image         String? // profile pic from OAuth or uploaded
+  password      String? // optional if using OAuth only
+  emailVerified DateTime? // useful for verification flow
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime? // soft delete
+  notebooks     Notebook[]
 }
