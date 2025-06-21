@@ -7,6 +7,7 @@ import { $Enums } from "@prisma/client";
 import { BiDownload, BiX } from "react-icons/bi";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
+import { toPng } from "html-to-image";
 
 const danaYad = localFont({
   src: "../../fonts/DanaYad.woff",
@@ -59,7 +60,7 @@ export default function Notebook({ id }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [failed, setFailed] = useState(false);
-  const pageRef = useRef(null);
+  const notebookRef = useRef(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -144,43 +145,17 @@ export default function Notebook({ id }: Props) {
   const page = JSON.parse(notebook.summary);
 
   async function handleDownloadPDF() {
-    const element = pageRef.current;
-    if (!element) throw new Error("Failed to find notebook page for download");
+    const element = notebookRef?.current;
+    if (!element) throw new Error("Failed to find notebook for download");
 
     const canvas = await html2canvas(element);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-
-    const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
-    const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
-
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const aspectRatio = imgWidth / imgHeight;
-
-    // Convert px → mm (assuming 96 DPI)
-    const pxToMm = (px: number) => (px * 25.4) / 96;
-    const imgMmWidth = pxToMm(imgWidth);
-    const imgMmHeight = pxToMm(imgHeight);
-
-    // Scale to fit page
-    let renderWidth = pageWidth;
-    let renderHeight = renderWidth / aspectRatio;
-    if (renderHeight > pageHeight) {
-      renderHeight = pageHeight;
-      renderWidth = renderHeight * aspectRatio;
-    }
-
-    const x = (pageWidth - renderWidth) / 2;
-    const y = (pageHeight - renderHeight) / 2;
-
-    pdf.addImage(imgData, "PNG", x, y, renderWidth, renderHeight);
-    pdf.save(page.title || "notebook.pdf");
+    const data = canvas.toDataURL("image/jpg");
+    const link = document.createElement("a");
+    link.href = data;
+    link.download = "מחברת Nootes-" + page.title + ".jpg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   function statusToHebrew(status: $Enums.NotebookStatus): string {
@@ -208,7 +183,7 @@ export default function Notebook({ id }: Props) {
           "w-full max-w-4xl my-4 overflow-hidden border border-gray-300 rounded-lg shadow-xl bg-paper " +
           gveretLevin.className
         }
-        ref={pageRef}
+        ref={notebookRef}
       >
         <header className="p-6 px-16 text-center border-b-2 border-gray-200 bg-paper">
           <h1 className="text-3xl font-black text-gray-700">{page.title}</h1>
