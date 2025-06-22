@@ -1,4 +1,3 @@
-import { getUserSession } from "@/lib/session";
 import UploadAudio from "./components/UploadAudio";
 
 export default async function Home() {

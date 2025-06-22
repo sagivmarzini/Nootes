@@ -3,13 +3,12 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { BiInfoCircle, BiMicrophone, BiX } from "react-icons/bi";
+import { BiMicrophone, BiX } from "react-icons/bi";
 
 export default function UploadAudio() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { data: session, status } = useSession();
-  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +57,6 @@ export default function UploadAudio() {
       setError(
         err instanceof Error ? err.message : "שגיאה לא ידועה בעת העלאת הקובץ"
       );
-    } finally {
       setIsLoading(false);
     }
   }

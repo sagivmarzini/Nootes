@@ -9,8 +9,6 @@ import { User } from "@prisma/client";
 export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("file");
-  const session = await getServerSession(authOptions);
-  let notebook;
 
   if (!file || !(file instanceof Blob)) {
     return NextResponse.json(
@@ -19,33 +17,42 @@ export async function POST(request: Request) {
     );
   }
 
-  if (session) {
-    // Get the logged in user's ID
-    const user = await prisma.user.findUnique({
-      where: { email: session.user?.email! },
-    });
-    if (!user) throw new Error("Logged in user not found");
-
-    const isAdmin = user.id == process.env.ADMIN_ID;
-    if (!isAdmin) {
-      if (await hitDailyLimit(user))
-        return NextResponse.json(
-          { error: "Daily limit reached. Come back tomorrow." },
-          { status: 429 }
-        );
-    } else {
-      console.log(`Admin '${user.name}' detected, surpassing daily limit...`);
-    }
-
-    // Use ID to create a notebook under his name
-    notebook = await prisma.notebook.create({
-      data: { status: "pending", userId: user?.id },
-    });
-  } else {
-    notebook = await prisma.notebook.create({
-      data: { status: "pending" },
-    });
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json(
+      { error: "You must be logged in to upload a recording" },
+      { status: 401 }
+    );
   }
+
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: "No user email in session" },
+      { status: 401 }
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user?.email },
+  });
+  if (!user) {
+    return NextResponse.json(
+      { error: "Logged-in user not found" },
+      { status: 404 }
+    );
+  }
+
+  const isAdmin = user.id === process.env.ADMIN_ID;
+  if (!isAdmin && (await hitDailyLimit(user))) {
+    return NextResponse.json(
+      { error: "Daily limit reached. Come back tomorrow." },
+      { status: 429 }
+    );
+  }
+
+  const notebook = await prisma.notebook.create({
+    data: { status: "pending", userId: user.id },
+  });
 
   processRecording(file, notebook.id);
 

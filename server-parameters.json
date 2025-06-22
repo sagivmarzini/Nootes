@@ -1,3 +1,4 @@
 {
-  "daily_limit": 5
+  "daily_limit": 5,
+  "notebook_polling_interval": 5000
 }

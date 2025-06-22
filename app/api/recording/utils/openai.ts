@@ -49,14 +49,6 @@ export async function transcribe(audioFile: File, id: number) {
       data: { status: "transcribing" },
     });
 
-    console.log(
-      `Starting transcription for file: ${audioFile.name}, size: ${(
-        audioFile.size /
-        1024 /
-        1024
-      ).toFixed(2)}MB`
-    );
-
     const transcription = await openai.audio.transcriptions.create({
       file: await toFile(audioFile, audioFile.name),
       model: "whisper-1",
@@ -72,8 +64,6 @@ export async function transcribe(audioFile: File, id: number) {
         status: "summarizing",
       },
     });
-
-    console.log(`Transcription completed for ID: ${id}`);
   } catch (error) {
     console.error(`Transcription failed for ID: ${id}`, error);
 
@@ -95,8 +85,6 @@ export async function summarize(id: number) {
     if (!notebook?.transcription) {
       throw new Error("No transcription found");
     }
-
-    console.log(`Starting summarization for ID: ${id}`);
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -126,8 +114,6 @@ export async function summarize(id: number) {
         summary,
       },
     });
-
-    console.log(`Summarization completed for ID: ${id}`);
   } catch (error) {
     console.error(`Summarization failed for ID: ${id}:`, error);
 

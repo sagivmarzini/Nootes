@@ -6,7 +6,7 @@ export const wavWorker = function () {
     const format = 1; // PCM
     const bitDepth = 16;
 
-    let result = new Float32Array(audioData.length * numChannels);
+    const result = new Float32Array(audioData.length * numChannels);
 
     // Reconstruct audio data from channels
     for (let channel = 0; channel < numChannels; channel++) {

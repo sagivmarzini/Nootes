@@ -1,76 +1,155 @@
-// app/notebook/[id]/Notebook.tsx
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PiSmileySad } from "react-icons/pi";
+import { $Enums, Notebook as NotebookType } from "@prisma/client";
+import { BiDownload, BiX } from "react-icons/bi";
 import html2canvas from "html2canvas-pro";
-import { BiDownload } from "react-icons/bi";
-import localFont from "next/font/local";
-import { Notebook } from "@prisma/client";
 import "./notebook.css";
+import parameters from "@/server-parameters.json";
 
-const gveretLevin = localFont({
-  src: "../../fonts/GveretLevin.woff2",
-  display: "swap",
-  variable: "--font-gveretlevin",
-});
+type Props = { id: number };
 
-export default function NotebookClient({ notebook }: { notebook: Notebook }) {
-  const [failed, setFailed] = useState(notebook.status === "failed");
+export default function Notebook({ id }: Props) {
+  const [notebook, setNotebook] = useState<NotebookType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [failed, setFailed] = useState(false);
   const notebookRef = useRef<HTMLDivElement>(null);
 
-  const page = useMemo(() => {
-    if (!notebook?.summary) return null;
-    try {
-      return JSON.parse(notebook.summary);
-    } catch (e) {
-      console.error("Failed to parse summary:", e);
-      return null;
-    }
-  }, [notebook.summary]);
+  useEffect(() => {
+    // eslint-disable-next-line prefer-const
+    let interval: NodeJS.Timeout;
+
+    const fetchNotebook = async () => {
+      try {
+        const response = await fetch(`/api/notebook/${id}`);
+        if (!response.ok) throw new Error("not found");
+        const data: NotebookType = await response.json();
+        setNotebook(data);
+
+        if (data.status === "completed" || data.status === "failed") {
+          clearInterval(interval);
+          if (data.status === "failed") setFailed(true);
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error(err);
+        setNotFound(true);
+        setIsLoading(false);
+        clearInterval(interval);
+      }
+    };
+
+    interval = setInterval(fetchNotebook, parameters.notebook_polling_interval);
+    fetchNotebook();
+
+    return () => clearInterval(interval);
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <span className="loading loading-ring loading-xl"></span>
+        <span>מחפשים את המחברת שלך...</span>
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="min-h-screen hero bg-base-200">
+        <div className="text-center hero-content">
+          <h1 className="flex flex-col items-center gap-2 text-xl font-semibold">
+            <BiX className="text-6xl" />
+            <span>
+              סליחה, התהליך נכשל
+              <br />
+              אנא נסו שוב
+            </span>
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !notebook) {
+    return (
+      <div className="min-h-screen hero bg-base-200">
+        <div className="text-center hero-content">
+          <h1 className="flex flex-col items-center gap-4 text-xl font-semibold">
+            <PiSmileySad className="text-6xl" />
+            <span>המחברת שלך לא נמצאת בשום מקום</span>
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (!notebook.summary) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <span className="loading loading-infinity loading-xl" />
+        <span>{statusToHebrew(notebook.status)}...</span>
+      </div>
+    );
+  }
+
+  const page = JSON.parse(notebook.summary);
 
   async function handleDownloadPDF() {
     const element = notebookRef?.current;
-    if (!element) throw new Error("Element not found");
-
+    if (!element) throw new Error("Failed to find notebook for download");
     await document.fonts.ready;
 
+    // Save original style
     const originalWidth = element.style.width;
     const originalMaxWidth = element.style.maxWidth;
     const originalLineColor = element.style.getPropertyValue("--line-color");
 
-    element.style.width = "894px";
+    // Temporarily change styling for downloading
+    element.style.width = "794px"; // A4 width in px at 96 DPI
     element.style.maxWidth = "none";
     element.style.setProperty("--line-color", "--paper");
 
+    // Wait for the DOM to repaint with new dimensions
     await new Promise((r) => setTimeout(r, 100));
 
+    // Screenshot the wide version
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 2, //
+      //  quality
       useCORS: true,
       backgroundColor: null,
       allowTaint: true,
     });
 
+    // Restore original styles
     element.style.width = originalWidth;
     element.style.maxWidth = originalMaxWidth;
     element.style.setProperty("--line-color", originalLineColor);
 
+    // Download as image
     const data = canvas.toDataURL("image/jpeg", 1.0);
     const link = document.createElement("a");
     link.href = data;
-    link.download = "Nootes.com-" + page?.title + ".jpg";
+    link.download = "Nootes.com-" + page.title + ".jpg";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   }
 
-  if (!page) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <span className="loading loading-infinity loading-xl" />
-        <span>טוען מחברת...</span>
-      </div>
-    );
+  function statusToHebrew(status: $Enums.NotebookStatus): string {
+    switch (status) {
+      case "transcribing":
+        return "מתמלל";
+      case "summarizing":
+        return "מסכם";
+
+      default:
+        return status;
+    }
   }
 
   return (
