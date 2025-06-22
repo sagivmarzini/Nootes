@@ -2,11 +2,10 @@
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import params from "@/server-parameters.json";
 import { User } from "@prisma/client";
 import { summarize, transcribe } from "@/lib/openai";
-import { put } from "@vercel/blob";
 import { storeFileInBlobStorage } from "@/lib/blob";
 
 // Supported audio formats by OpenAI Whisper
@@ -53,7 +52,9 @@ async function getUserSession() {
   return session;
 }
 
-async function getUserFromSession(session: any) {
+async function getUserFromSession(session: Session) {
+  if (!session.user?.email) throw new Error("No user email in session");
+
   const user = await prisma.user.findUnique({
     where: { email: session.user?.email },
   });
