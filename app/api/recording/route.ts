@@ -42,7 +42,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const isAdmin = user.id === process.env.ADMIN_ID;
+  const isAdmin =
+    user.id === process.env.ADMIN_ID || user.email === process.env.ADMIN_EMAIL;
   if (!isAdmin && (await hitDailyLimit(user))) {
     return NextResponse.json(
       { error: "Daily limit reached. Come back tomorrow." },
