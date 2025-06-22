@@ -7,9 +7,9 @@ import SessionProviderWrapper from "./components/SessionProviderWrapper";
 const rubik = Rubik({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Class Summarizer by Sagiv",
+  title: "Nootes",
   description:
-    "Didn't listen in class? No worries! Record your teacher and in minutes we will create you a perfect notebook page of what you missed.",
+    "לא הקשבתם בשיעור? אין בעיה! תקליטו את השיעור ותקבלו סיכום חכם, כתוב על דף מחברת – כאילו הייתם שם.",
 };
 
 export default function RootLayout({

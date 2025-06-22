@@ -131,12 +131,12 @@ export default function UploadAudio() {
           ? "טוען..."
           : status !== "authenticated"
           ? "התחברות והעלאת הקלטה"
-          : "העלו הקלטה"}{" "}
+          : "העלו הקלטה"}
       </button>
       {status !== "authenticated" && (
         <div className="flex items-center justify-center w-full gap-1 text-sm text-center text-gray-500">
           <span className="max-w-xs">
-            השימוש חינמי, אך העלאת הקלטה דורשת התחברות לחשבון Google שלך.
+            ההרשמה חינמית, אך העלאת הקלטה דורשת התחברות לחשבון Google שלך.
           </span>
         </div>
       )}
