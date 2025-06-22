@@ -23,7 +23,9 @@ export async function uploadRecording(recording: File) {
 
   const notebook = await createPendingNotebook(user.id);
 
-  processRecording(recording, notebook.id);
+  setTimeout(() => {
+    processRecording(recording, notebook.id);
+  }, 0);
 
   return { id: notebook.id };
 }
@@ -77,6 +79,7 @@ async function createPendingNotebook(userId: string) {
 
 async function processRecording(recording: File, notebookId: number) {
   try {
+    // TODO: Move the blob uploading to the client
     const blob = await uploadFileToBlobStorage(recording, notebookId);
     await transcribe(blob.url, blob.pathname, notebookId);
     await summarize(notebookId);
