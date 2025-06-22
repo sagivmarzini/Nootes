@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import OpenAI, { toFile } from "openai";
-import { readFileSync } from "fs";
+import params from "@/server-parameters.json";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const TRANSCRIBE_PROMPT =
-  "This recording is of a teacher from a high-school class, in Israel, in Hebrew. There might be Hebrew and foreign names, verses from bible and Talmud, etc.";
-const SUMMARIZE_PROMPT = readFileSync("./prompts/summarize.txt", "utf8");
+const TRANSCRIBE_PROMPT = params.prompts.transcribe;
+const SUMMARIZE_PROMPT = params.prompts.summarize;
 
 // Supported audio formats by OpenAI Whisper
 const SUPPORTED_FORMATS = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"];
