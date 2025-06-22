@@ -1,47 +1,19 @@
 import { prisma } from "@/lib/prisma";
-import OpenAI, { toFile } from "openai";
+import OpenAI from "openai";
 import params from "@/server-parameters.json";
+import { deleteBlob, fetchBlobAsFile } from "./blob";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const TRANSCRIBE_PROMPT = params.prompts.transcribe;
 const SUMMARIZE_PROMPT = params.prompts.summarize;
 
-// Supported audio formats by OpenAI Whisper
-const SUPPORTED_FORMATS = ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"];
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB limit
-
-function getFileExtension(filename: string): string {
-  return filename.split(".").pop()?.toLowerCase() || "";
-}
-
-function validateAudioFile(file: File): void {
-  const extension = getFileExtension(file.name);
-
-  if (!SUPPORTED_FORMATS.includes(extension)) {
-    throw new Error(
-      `Unsupported audio format: ${extension}. Supported formats: ${SUPPORTED_FORMATS.join(
-        ", "
-      )}`
-    );
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(
-      `File too large: ${(file.size / 1024 / 1024).toFixed(
-        2
-      )}MB. Maximum size: 25MB`
-    );
-  }
-
-  if (file.size === 0) {
-    throw new Error("File is empty or corrupted");
-  }
-}
-
-export async function transcribe(audioFile: File, id: number) {
+export async function transcribe(
+  recordingUrl: string,
+  filename: string,
+  id: number
+) {
   try {
-    // Validate the audio file first
-    validateAudioFile(audioFile);
+    const audioFile = await fetchBlobAsFile(recordingUrl, filename);
 
     await prisma.notebook.update({
       where: { id },
@@ -49,7 +21,7 @@ export async function transcribe(audioFile: File, id: number) {
     });
 
     const transcription = await openai.audio.transcriptions.create({
-      file: await toFile(audioFile, audioFile.name),
+      file: audioFile,
       model: "whisper-1",
       language: "he",
       prompt: TRANSCRIBE_PROMPT,
@@ -63,6 +35,8 @@ export async function transcribe(audioFile: File, id: number) {
         status: "summarizing",
       },
     });
+
+    deleteBlob(recordingUrl);
   } catch (error) {
     console.error(`Transcription failed for ID: ${id}`, error);
 

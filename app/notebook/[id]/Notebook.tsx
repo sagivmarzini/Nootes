@@ -64,7 +64,7 @@ export default function Notebook({ id }: Props) {
           <h1 className="flex flex-col items-center gap-2 text-xl font-semibold">
             <BiX className="text-6xl" />
             <span>
-              סליחה, התהליך נכשל
+              סליחה, התהליך נכשל.
               <br />
               אנא נסו שוב
             </span>
@@ -142,6 +142,8 @@ export default function Notebook({ id }: Props) {
 
   function statusToHebrew(status: $Enums.NotebookStatus): string {
     switch (status) {
+      case "pending":
+        return "מתחיל";
       case "transcribing":
         return "מתמלל";
       case "summarizing":
