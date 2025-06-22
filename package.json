@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",
+    "@vercel/blob": "^1.1.1",
     "axios": "^1.10.0",
     "daisyui": "^5.0.43",
     "html2canvas-pro": "^1.5.11",

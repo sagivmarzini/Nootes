@@ -4,6 +4,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { BiMicrophone, BiX } from "react-icons/bi";
+import { uploadRecording } from "../actions/recording";
 
 export default function UploadAudio() {
   const router = useRouter();
@@ -13,16 +14,18 @@ export default function UploadAudio() {
   const [error, setError] = useState<string | null>(null);
 
   const handleClick = () => {
-    setError(null); // Clear any existing errors
+    setError(null);
+
     if (status !== "authenticated") {
       signIn("google", { callbackUrl: "/" });
       return;
     }
+
     inputRef.current?.click();
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) {
       setError("לא הועלה קובץ.");
       return;
@@ -30,32 +33,23 @@ export default function UploadAudio() {
     if (!validateFileInput(file)) {
       return;
     }
+
     submitAudioFile(file);
   };
 
   async function submitAudioFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/recording", {
-        method: "POST",
-        body: formData,
-      });
+      const notebook = await uploadRecording(file);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "שגיאה בעת העלאת הקובץ");
-      }
-
-      router.push(`/notebook/${data.id}`);
-    } catch (err) {
+      router.push(`/notebook/${notebook.id}`);
+    } catch (error) {
       setError(
-        err instanceof Error ? err.message : "שגיאה לא ידועה בעת העלאת הקובץ"
+        error instanceof Error
+          ? error.message
+          : "שגיאה לא ידועה בעת העלאת הקובץ"
       );
       setIsLoading(false);
     }

@@ -119,18 +119,3 @@ export async function summarize(id: number) {
     throw error;
   }
 }
-
-// Helper function to check audio file before processing
-export async function validateAndProcessAudio(
-  audioFile: File
-): Promise<{ isValid: boolean; error?: string }> {
-  try {
-    validateAudioFile(audioFile);
-    return { isValid: true };
-  } catch (error) {
-    return {
-      isValid: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
