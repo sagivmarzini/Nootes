@@ -1,9 +1,7 @@
 import { handleUpload, HandleUploadBody } from "@vercel/blob/client";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { handleRecording } from "./recording";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 import { getFileExtension } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<NextResponse> {
