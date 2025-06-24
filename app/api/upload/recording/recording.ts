@@ -2,24 +2,22 @@ import { prisma } from "@/lib/prisma";
 import params from "@/server-parameters.json";
 import { User } from "@prisma/client";
 import { summarize, transcribe } from "@/lib/openai";
-import { fetchBlobAsFile } from "@/lib/blob";
+import { deleteBlob, fetchBlobAsFile } from "@/lib/blob";
 
 export async function handleRecording(
   recordingUrl: string,
-  recordingName: string,
-  userEmail: string,
+  fileExtension: string,
+  user: User,
   notebookId: number
 ) {
-  const user = await prisma.user.findUnique({ where: { email: userEmail } });
-  if (!user) throw new Error(`No user with the email ${userEmail} found`);
-
   await enforceLimits(user);
 
-  const recording = await fetchBlobAsFile(recordingUrl, recordingName);
+  const recording = await fetchBlobAsFile(
+    recordingUrl,
+    "recording." + fileExtension
+  );
 
-  setTimeout(() => {
-    processRecording(recording, notebookId);
-  }, 0);
+  processRecording(recording, notebookId, recordingUrl);
 
   return { id: notebookId };
 }
@@ -31,10 +29,16 @@ async function enforceLimits(user: User) {
     throw new Error("Daily limit reached. Come back tomorrow.");
 }
 
-async function processRecording(recording: File, notebookId: number) {
+async function processRecording(
+  recording: File,
+  notebookId: number,
+  blobUrl: string
+) {
   try {
     // TODO: Fix OpenAI function responsibilities to only return result
     await transcribe(recording, notebookId);
+    console.log("FINISHED TRANSCRIBING, DELETING BLOB...");
+    deleteBlob(blobUrl);
     await summarize(notebookId);
   } catch (error) {
     console.error(error);

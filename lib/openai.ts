@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import params from "@/server-parameters.json";
-import { deleteBlob, fetchBlobAsFile } from "./blob";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const TRANSCRIBE_PROMPT = params.prompts.transcribe;
