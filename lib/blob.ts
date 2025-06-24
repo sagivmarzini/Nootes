@@ -14,7 +14,7 @@ export async function fetchBlobAsFile(
   return new File([blob], filename);
 }
 
-export async function storeFileInBlobStorage(file: File, filename: string) {
+export async function putFileInBlobStorage(file: File, filename: string) {
   return await put(filename, file, { access: "public" });
 }
 

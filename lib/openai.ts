@@ -7,21 +7,15 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const TRANSCRIBE_PROMPT = params.prompts.transcribe;
 const SUMMARIZE_PROMPT = params.prompts.summarize;
 
-export async function transcribe(
-  recordingUrl: string,
-  filename: string,
-  id: number
-) {
+export async function transcribe(recording: File, id: number) {
   try {
-    const audioFile = await fetchBlobAsFile(recordingUrl, filename);
-
     await prisma.notebook.update({
       where: { id },
       data: { status: "transcribing" },
     });
 
     const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
+      file: recording,
       model: "whisper-1",
       language: "he",
       prompt: TRANSCRIBE_PROMPT,
@@ -35,8 +29,6 @@ export async function transcribe(
         status: "summarizing",
       },
     });
-
-    deleteBlob(recordingUrl);
   } catch (error) {
     console.error(`Transcription failed for ID: ${id}`, error);
 

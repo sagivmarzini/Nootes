@@ -4,7 +4,9 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { BiMicrophone, BiX } from "react-icons/bi";
-import { uploadRecording } from "../actions/recording";
+import { upload } from "@vercel/blob/client";
+import { createNotebook } from "../actions/createNotebook";
+import { getFileExtension } from "@/lib/utils";
 
 export default function UploadAudio() {
   const router = useRouter();
@@ -16,7 +18,7 @@ export default function UploadAudio() {
   const handleClick = () => {
     setError(null);
 
-    if (status !== "authenticated") {
+    if (process.env.NODE_ENV !== "development" && status !== "authenticated") {
       signIn("google", { callbackUrl: "/" });
       return;
     }
@@ -42,7 +44,15 @@ export default function UploadAudio() {
     setError(null);
 
     try {
-      const notebook = await uploadRecording(file);
+      const notebook = await createNotebook();
+      const filename = `recording${notebook.id}.${getFileExtension(file.name)}`;
+
+      await upload(filename, file, {
+        access: "public",
+        multipart: true,
+        handleUploadUrl: `${window.location.origin}/api/upload/recording`,
+        clientPayload: JSON.stringify({ notebookId: notebook.id }),
+      });
 
       router.push(`/notebook/${notebook.id}`);
     } catch (error) {
