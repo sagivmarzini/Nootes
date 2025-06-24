@@ -18,7 +18,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         name: "Dev User", // optional
       },
     };
-  } else if (!session || !session.user) {
+  } else if (!session) {
+    console.log("Session not found: ", session);
     return NextResponse.json(
       { error: "Unauthorized: No user session found" },
       { status: 401 }
