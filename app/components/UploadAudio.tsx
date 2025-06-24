@@ -44,7 +44,11 @@ export default function UploadAudio() {
     setError(null);
 
     try {
-      console.log(`Starting upload for file: ${file.name}, size: ${file.size}`);
+      console.log(
+        `Starting upload for file: ${file.name}, size: ${
+          file.size / 1024 / 1024
+        }MB`
+      );
 
       const notebook = await createNotebook();
       console.log(`Created notebook with ID: ${notebook.id}`);

@@ -80,7 +80,7 @@ export default function Notebook({ id }: Props) {
         <div className="text-center hero-content">
           <h1 className="flex flex-col items-center gap-4 text-xl font-semibold">
             <PiSmileySad className="text-6xl" />
-            <span>המחברת שלך לא נמצאת בשום מקום</span>
+            <span>המחברת לא קיימת</span>
           </h1>
         </div>
       </div>
