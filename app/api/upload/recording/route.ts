@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { handleRecording } from "./recording";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { getFileExtension } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body: HandleUploadBody = await request.json();
@@ -38,7 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           clientJson = clientPayload ? JSON.parse(clientPayload) : {};
         } catch (error) {
           throw new Error(
-            "Failed to parse clientPayload in onBeforeGenerateToken"
+            "Failed to parse clientPayload in onBeforeGenerateToken: " + error
           );
         }
 
@@ -75,8 +76,8 @@ export async function POST(request: Request): Promise<NextResponse> {
           setTimeout(() => {
             handleRecording(
               blob.url,
-              blob.pathname,
-              payload.email,
+              getFileExtension(blob.pathname),
+              user,
               payload.notebookId
             );
           }, 0);
