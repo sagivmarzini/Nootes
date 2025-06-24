@@ -11,7 +11,7 @@ import { getFileExtension } from "@/lib/utils";
 export default function UploadAudio() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { status } = useSession();
+  const { status, data } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +51,10 @@ export default function UploadAudio() {
         access: "public",
         multipart: true,
         handleUploadUrl: `${window.location.origin}/api/upload/recording`,
-        clientPayload: JSON.stringify({ notebookId: notebook.id }),
+        clientPayload: JSON.stringify({
+          notebookId: notebook.id,
+          email: data?.user?.email,
+        }),
       });
 
       router.push(`/notebook/${notebook.id}`);
