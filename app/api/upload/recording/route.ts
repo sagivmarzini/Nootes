@@ -1,6 +1,6 @@
 import { handleUpload, HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
-import { handleRecording } from "./recording";
+import { handleRecording, markNotebookFailed } from "./recording";
 import { prisma } from "@/lib/prisma";
 import { getFileExtension } from "@/lib/utils";
 
@@ -35,13 +35,12 @@ export async function POST(request: Request): Promise<NextResponse> {
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
+        if (!tokenPayload)
+          throw new Error("Missing tokenPayload in upload completed handler");
+
+        const payload: { email: string; notebookId: number } =
+          JSON.parse(tokenPayload);
         try {
-          if (!tokenPayload)
-            throw new Error("Missing tokenPayload in upload completed handler");
-
-          const payload: { email: string; notebookId: number } =
-            JSON.parse(tokenPayload);
-
           // Update the notebook owner
           const user = await prisma.user.findUnique({
             where: { email: payload.email },
@@ -53,16 +52,15 @@ export async function POST(request: Request): Promise<NextResponse> {
             data: { userId: user?.id },
           });
 
-          setTimeout(() => {
-            handleRecording(
-              blob.url,
-              getFileExtension(blob.pathname),
-              user,
-              payload.notebookId
-            );
-          }, 0);
+          await handleRecording(
+            blob.url,
+            getFileExtension(blob.pathname),
+            user,
+            payload.notebookId
+          );
         } catch (error) {
           console.error("onUploadCompleted failed:", error);
+          await markNotebookFailed(payload.notebookId);
         }
       },
     });
