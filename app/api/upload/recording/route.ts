@@ -8,23 +8,6 @@ import { getFileExtension } from "@/lib/utils";
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body: HandleUploadBody = await request.json();
-  let session = await getServerSession(authOptions);
-
-  if (process.env.NODE_ENV === "development") {
-    session = {
-      expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
-      user: {
-        email: "sagivmarzini1@gmail.com",
-        name: "Dev User", // optional
-      },
-    };
-  } else if (!session) {
-    console.log("Session not found: ", session);
-    return NextResponse.json(
-      { error: "Unauthorized: No user session found" },
-      { status: 401 }
-    );
-  }
 
   try {
     const response = await handleUpload({
@@ -34,7 +17,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         pathname: string,
         clientPayload: string | null
       ) => {
-        const email = session?.user?.email;
         let clientJson = {};
         try {
           clientJson = clientPayload ? JSON.parse(clientPayload) : {};
@@ -45,7 +27,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         const fullPayload = {
-          email,
           ...clientJson,
         };
 
