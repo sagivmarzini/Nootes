@@ -132,7 +132,7 @@ export async function summarize(transcription: string) {
     // Validate JSON format
     try {
       JSON.parse(summary);
-    } catch (parseError) {
+    } catch {
       console.error("Invalid JSON in summary:", summary);
       throw new Error("Summary is not valid JSON format");
     }
