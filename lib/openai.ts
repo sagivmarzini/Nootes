@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import params from "@/server-parameters.json";
 
@@ -6,32 +5,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const TRANSCRIBE_PROMPT = params.prompts.transcribe;
 const SUMMARIZE_PROMPT = params.prompts.summarize;
 
-export async function transcribe(recording: File, id: number) {
+export async function transcribe(recording: File) {
   try {
-    await prisma.notebook.update({
-      where: { id },
-      data: { status: "transcribing" },
-    });
-
-    const transcription = await openai.audio.transcriptions.create({
+    return await openai.audio.transcriptions.create({
       file: recording,
       model: "whisper-1",
       language: "he",
       prompt: TRANSCRIBE_PROMPT,
       response_format: "text",
     });
-
-    await prisma.notebook.update({
-      where: { id },
-      data: {
-        transcription: transcription,
-        status: "summarizing",
-      },
-    });
   } catch (error) {
-    console.error(`Transcription failed for ID: ${id}`, error);
+    console.error(`Transcription failed for: ${recording.name}`, error);
 
-    // Re-throw with more specific error information
     if (error instanceof Error) {
       throw new Error(`Transcription failed: ${error.message}`);
     } else {
@@ -40,14 +25,10 @@ export async function transcribe(recording: File, id: number) {
   }
 }
 
-export async function summarize(id: number) {
+export async function summarize(transcription: string) {
   try {
-    const notebook = await prisma.notebook.findUnique({
-      where: { id },
-    });
-
-    if (!notebook?.transcription) {
-      throw new Error("No transcription found");
+    if (!transcription) {
+      throw new Error("No transcription given");
     }
 
     const response = await openai.chat.completions.create({
@@ -59,7 +40,7 @@ export async function summarize(id: number) {
         },
         {
           role: "user",
-          content: "THIS IS THE TRANSCRIPTION: " + notebook.transcription,
+          content: "THIS IS THE TRANSCRIPTION: " + transcription,
         },
       ],
       stream: false,
@@ -71,16 +52,14 @@ export async function summarize(id: number) {
       throw new Error("Failed to get ChatGPT content");
     }
 
-    await prisma.notebook.update({
-      where: { id },
-      data: {
-        status: "completed",
-        summary,
-      },
-    });
+    return summary;
   } catch (error) {
-    console.error(`Summarization failed for ID: ${id}:`, error);
+    console.error("Summarization failed: ", error);
 
-    throw error;
+    if (error instanceof Error) {
+      throw new Error(`Summarization failed: ${error.message}`);
+    } else {
+      throw new Error(`Summarization failed: ${String(error)}`);
+    }
   }
 }

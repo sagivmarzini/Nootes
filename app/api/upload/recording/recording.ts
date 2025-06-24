@@ -35,18 +35,36 @@ async function processRecording(
   blobUrl: string
 ) {
   try {
-    // TODO: Fix OpenAI function responsibilities to only return result
-    await transcribe(recording, notebookId);
+    await prisma.notebook.update({
+      where: { id: notebookId },
+      data: { status: "transcribing" },
+    });
+    const transcription = await transcribe(recording);
+    await prisma.notebook.update({
+      where: { id: notebookId },
+      data: {
+        transcription: transcription,
+        status: "summarizing",
+      },
+    });
     console.log("FINISHED TRANSCRIBING, DELETING BLOB...");
     deleteBlob(blobUrl);
-    await summarize(notebookId);
+
+    const summary = await summarize(transcription);
+    await prisma.notebook.update({
+      where: { id: notebookId },
+      data: {
+        status: "completed",
+        summary,
+      },
+    });
   } catch (error) {
     console.error(error);
     await markNotebookFailed(notebookId);
   }
 }
 
-async function markNotebookFailed(id: number) {
+export async function markNotebookFailed(id: number) {
   await prisma.notebook.update({
     where: { id },
     data: {
