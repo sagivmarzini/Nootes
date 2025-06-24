@@ -10,23 +10,38 @@ export async function handleRecording(
   user: User,
   notebookId: number
 ) {
-  await enforceLimits(user);
+  console.log(`handleRecording started for notebook ${notebookId}`);
 
-  const recording = await fetchBlobAsFile(
-    recordingUrl,
-    "recording." + fileExtension
-  );
+  try {
+    await enforceLimits(user);
 
-  processRecording(recording, notebookId, recordingUrl);
+    const recording = await fetchBlobAsFile(
+      recordingUrl,
+      "recording." + fileExtension
+    );
 
-  return { id: notebookId };
+    console.log(`Fetched blob file, size: ${recording.size} bytes`);
+
+    // IMPORTANT: Await the processing
+    await processRecording(recording, notebookId, recordingUrl);
+
+    console.log(
+      `handleRecording completed successfully for notebook ${notebookId}`
+    );
+    return { id: notebookId };
+  } catch (error) {
+    console.error(`handleRecording failed for notebook ${notebookId}:`, error);
+    await markNotebookFailed(notebookId);
+    throw error; // Re-throw to propagate error
+  }
 }
 
 async function enforceLimits(user: User) {
   const isAdmin =
     user.id === process.env.ADMIN_ID || user.email === process.env.ADMIN_EMAIL;
-  if (!isAdmin && (await hitDailyLimit(user)))
+  if (!isAdmin && (await hitDailyLimit(user))) {
     throw new Error("Daily limit reached. Come back tomorrow.");
+  }
 }
 
 async function processRecording(
@@ -34,12 +49,29 @@ async function processRecording(
   notebookId: number,
   blobUrl: string
 ) {
+  console.log(`processRecording started for notebook ${notebookId}`);
+
   try {
+    // Set status to transcribing
     await prisma.notebook.update({
       where: { id: notebookId },
       data: { status: "transcribing" },
     });
+
+    console.log(`Starting transcription for notebook ${notebookId}`);
+    const transcriptionStart = Date.now();
+
     const transcription = await transcribe(recording);
+
+    const transcriptionTime = Date.now() - transcriptionStart;
+    console.log(
+      `Transcription completed for notebook ${notebookId} in ${transcriptionTime}ms`
+    );
+
+    if (!transcription || transcription.trim().length === 0) {
+      throw new Error("Transcription returned empty result");
+    }
+
     await prisma.notebook.update({
       where: { id: notebookId },
       data: {
@@ -47,10 +79,29 @@ async function processRecording(
         status: "summarizing",
       },
     });
-    console.log("FINISHED TRANSCRIBING, DELETING BLOB...");
-    deleteBlob(blobUrl);
+
+    console.log(`Starting blob deletion for notebook ${notebookId}`);
+    try {
+      await deleteBlob(blobUrl);
+      console.log(`Blob deleted successfully for notebook ${notebookId}`);
+    } catch (deleteError) {
+      // Don't fail the whole process if blob deletion fails
+      console.warn(
+        `Failed to delete blob for notebook ${notebookId}:`,
+        deleteError
+      );
+    }
+
+    console.log(`Starting summarization for notebook ${notebookId}`);
+    const summaryStart = Date.now();
 
     const summary = await summarize(transcription);
+
+    const summaryTime = Date.now() - summaryStart;
+    console.log(
+      `Summarization completed for notebook ${notebookId} in ${summaryTime}ms`
+    );
+
     await prisma.notebook.update({
       where: { id: notebookId },
       data: {
@@ -58,19 +109,32 @@ async function processRecording(
         summary,
       },
     });
+
+    console.log(
+      `processRecording completed successfully for notebook ${notebookId}`
+    );
   } catch (error) {
-    console.error(error);
+    console.error(`processRecording failed for notebook ${notebookId}:`, error);
     await markNotebookFailed(notebookId);
+    throw error; // Re-throw to propagate error
   }
 }
 
 export async function markNotebookFailed(id: number) {
-  await prisma.notebook.update({
-    where: { id },
-    data: {
-      status: "failed",
-    },
-  });
+  try {
+    console.log(`Marking notebook ${id} as failed`);
+    await prisma.notebook.update({
+      where: { id },
+      data: {
+        status: "failed",
+        // Optionally store error message
+        // errorMessage: error?.message || "Unknown error"
+      },
+    });
+    console.log(`Notebook ${id} marked as failed`);
+  } catch (error) {
+    console.error(`Failed to mark notebook ${id} as failed:`, error);
+  }
 }
 
 async function hitDailyLimit(user: User) {
