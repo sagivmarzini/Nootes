@@ -40,7 +40,12 @@ export default function UploadAudio() {
   };
 
   async function submitAudioFile(file: File) {
-    if (!data?.user?.email) {
+    const email =
+      process.env.NODE_ENV === "development"
+        ? "sagivmarzini1@gmail.com"
+        : data?.user?.email;
+
+    if (!email) {
       setError("יש להתחבר לפני העלאת קובץ");
       return;
     }
@@ -66,7 +71,7 @@ export default function UploadAudio() {
         handleUploadUrl: `${window.location.origin}/api/upload/recording`,
         clientPayload: JSON.stringify({
           notebookId: notebook.id,
-          email: data.user.email,
+          email,
         }),
       });
 
