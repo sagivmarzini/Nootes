@@ -11,7 +11,7 @@ export async function fetchBlobAsFile(
   filename: string
 ): Promise<File> {
   const blob = await fetchFile(url);
-  return new File([blob], filename);
+  return new File([blob], filename, { type: blob.type });
 }
 
 export async function putFileInBlobStorage(file: File, filename: string) {
