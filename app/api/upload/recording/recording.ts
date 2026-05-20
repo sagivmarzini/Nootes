@@ -31,7 +31,10 @@ export async function handleRecording(
     return { id: notebookId };
   } catch (error) {
     console.error(`handleRecording failed for notebook ${notebookId}:`, error);
-    await markNotebookFailed(notebookId);
+    await markNotebookFailed(
+      notebookId,
+      error instanceof Error ? error.message : String(error)
+    );
     throw error; // Re-throw to propagate error
   }
 }
@@ -115,20 +118,26 @@ async function processRecording(
     );
   } catch (error) {
     console.error(`processRecording failed for notebook ${notebookId}:`, error);
-    await markNotebookFailed(notebookId);
+    await markNotebookFailed(
+      notebookId,
+      error instanceof Error ? error.message : String(error)
+    );
     throw error; // Re-throw to propagate error
   }
 }
 
-export async function markNotebookFailed(id: number) {
+export async function markNotebookFailed(id: number, errorMessage?: string) {
   try {
-    console.log(`Marking notebook ${id} as failed`);
+    console.log(
+      `Marking notebook ${id} as failed${
+        errorMessage ? `: ${errorMessage}` : ""
+      }`
+    );
     await prisma.notebook.update({
       where: { id },
       data: {
         status: "failed",
-        // Optionally store error message
-        // errorMessage: error?.message || "Unknown error"
+        errorMessage: errorMessage ?? null,
       },
     });
     console.log(`Notebook ${id} marked as failed`);

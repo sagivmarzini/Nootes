@@ -27,6 +27,7 @@ model Notebook {
   status        NotebookStatus @default(pending)
   transcription String? // null at first, filled later
   summary       String? // optional, filled later
+  errorMessage  String? // populated when status becomes "failed"
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   userId        String?

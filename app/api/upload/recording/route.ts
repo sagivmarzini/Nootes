@@ -39,9 +39,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         console.log(`Upload completed for blob: ${blob.url}`);
 
         if (!tokenPayload) {
-          const error = "Missing tokenPayload in upload completed handler";
-          console.error(error);
-          throw new Error(error);
+          console.error("Missing tokenPayload in upload completed handler");
+          return;
         }
 
         let payload: { email: string; notebookId: number };
@@ -49,20 +48,16 @@ export async function POST(request: Request): Promise<NextResponse> {
           payload = JSON.parse(tokenPayload);
         } catch (error) {
           console.error("Failed to parse tokenPayload:", error);
-          throw new Error("Invalid tokenPayload format");
+          return;
         }
 
         try {
-          // Update the notebook owner
           const user = await prisma.user.findUnique({
             where: { email: payload.email },
           });
 
           if (!user) {
-            const error = `User not found for email: ${payload.email}`;
-            console.error(error);
-            await markNotebookFailed(payload.notebookId);
-            throw new Error(error);
+            throw new Error(`User not found for email: ${payload.email}`);
           }
 
           await prisma.notebook.update({
@@ -72,7 +67,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
           console.log(`Starting processing for notebook ${payload.notebookId}`);
 
-          // IMPORTANT: Await the processing to catch errors
           await handleRecording(
             blob.url,
             getFileExtension(blob.pathname),
@@ -85,9 +79,14 @@ export async function POST(request: Request): Promise<NextResponse> {
           );
         } catch (error) {
           console.error("onUploadCompleted failed:", error);
-          await markNotebookFailed(payload.notebookId);
-          // Re-throw to propagate error to client
-          throw error;
+          await markNotebookFailed(
+            payload.notebookId,
+            error instanceof Error ? error.message : String(error)
+          );
+          // Do NOT re-throw: Vercel Blob retries the webhook on non-2xx
+          // responses, which re-runs the entire pipeline (and OpenAI calls)
+          // 2-3 more times. The notebook is already marked failed and the
+          // user can see the reason via errorMessage.
         }
       },
     });
@@ -96,10 +95,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch (error) {
     console.error("Upload API error:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Unknown upload error",
-        details: error instanceof Error ? error.stack : String(error),
-      },
+      { error: error instanceof Error ? error.message : "Unknown upload error" },
       { status: 500 }
     );
   }
