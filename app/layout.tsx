@@ -4,7 +4,7 @@ import { Rubik } from "next/font/google";
 import NavBar from "./components/NavBar";
 import SessionProviderWrapper from "./components/SessionProviderWrapper";
 
-const rubik = Rubik({ subsets: ["latin"] });
+const rubik = Rubik({ subsets: ["latin", "hebrew"] });
 
 export const metadata: Metadata = {
   title: "Nootes",
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="school">
+    <html lang="he" data-theme="school">
       <body className={rubik.className} dir="rtl">
         <SessionProviderWrapper>
           <NavBar />
