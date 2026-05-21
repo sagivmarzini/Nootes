@@ -15,7 +15,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const notebook = await prisma.notebook.findUnique({ where: { id: params.id } });
-  if (!notebook)
+  if (!notebook || !notebook.userId)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const user = await prisma.user.findUnique({
