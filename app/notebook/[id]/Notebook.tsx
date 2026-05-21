@@ -5,8 +5,15 @@ import { PiSmileySad } from "react-icons/pi";
 import { $Enums, Notebook as NotebookType } from "@prisma/client";
 import { BiDownload, BiX } from "react-icons/bi";
 import html2canvas from "html2canvas-pro";
+import DOMPurify from "dompurify";
 import "./notebook.css";
 import parameters from "@/server-parameters.json";
+
+const ALLOWED_TAGS = ["p", "ul", "li", "strong", "em", "br"];
+
+function sanitize(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] });
+}
 
 type Props = { id: string };
 
@@ -187,16 +194,16 @@ export default function Notebook({ id }: Props) {
             <div className="grid grid-cols-3 pt-[var(--baseline-offset)] min-h-[50vh] leading-[var(--line-height)]">
               <div
                 className="col-span-2 p-4 pb-0 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: page.notes || "" }}
+                dangerouslySetInnerHTML={{ __html: sanitize(page.notes || "") }}
               ></div>
               <div
                 className="col-span-1 p-4 pb-0 overflow-y-auto text-blue-800"
-                dangerouslySetInnerHTML={{ __html: page.cues || "" }}
+                dangerouslySetInnerHTML={{ __html: sanitize(page.cues || "") }}
               ></div>
             </div>
             <div
               className=" border-pink-400 p-4 pt-2 text-red-800 leading-[var(--line-height)] bg-paper"
-              dangerouslySetInnerHTML={{ __html: page.summary || "" }}
+              dangerouslySetInnerHTML={{ __html: sanitize(page.summary || "") }}
               style={{
                 backgroundImage:
                   "linear-gradient(to bottom, transparent 27px, var(--line-color) 28px)",
