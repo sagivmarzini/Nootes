@@ -97,9 +97,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Upload API error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown upload error" },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Unknown upload error";
+    const status = message === "Unauthorized" ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
