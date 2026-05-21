@@ -22,7 +22,7 @@ enum NotebookStatus {
 }
 
 model Notebook {
-  id            Int            @id @default(autoincrement())
+  id            String         @id @default(uuid())
   status        NotebookStatus @default(pending)
   transcription String? // null at first, filled later
   summary       String? // optional, filled later
