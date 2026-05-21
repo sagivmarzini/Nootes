@@ -8,7 +8,7 @@ export async function handleRecording(
   recordingUrl: string,
   fileExtension: string,
   user: User,
-  notebookId: number
+  notebookId: string
 ) {
   console.log(`handleRecording started for notebook ${notebookId}`);
 
@@ -49,7 +49,7 @@ async function enforceLimits(user: User) {
 
 async function processRecording(
   recording: File,
-  notebookId: number,
+  notebookId: string,
   blobUrl: string
 ) {
   console.log(`processRecording started for notebook ${notebookId}`);
@@ -126,7 +126,7 @@ async function processRecording(
   }
 }
 
-export async function markNotebookFailed(id: number, errorMessage?: string) {
+export async function markNotebookFailed(id: string, errorMessage?: string) {
   try {
     console.log(
       `Marking notebook ${id} as failed${
