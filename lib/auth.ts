@@ -16,15 +16,22 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ profile }) {
+    async signIn({ user, profile }) {
       if (!profile?.email) {
         throw new Error("No profile");
       }
 
       await prisma.user.upsert({
         where: { email: profile.email },
-        create: { email: profile.email, name: profile.name },
-        update: { name: profile.name },
+        create: {
+          email: profile.email,
+          name: profile.name,
+          image: user.image ?? null,
+        },
+        update: {
+          name: profile.name,
+          image: user.image ?? null,
+        },
       });
 
       return true;

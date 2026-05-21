@@ -42,7 +42,7 @@ export default function UploadAudio() {
   async function submitAudioFile(file: File) {
     const email =
       process.env.NODE_ENV === "development"
-        ? "dev@example.com"
+        ? process.env.NEXT_PUBLIC_DEV_USER_EMAIL
         : data?.user?.email;
 
     if (!email) {

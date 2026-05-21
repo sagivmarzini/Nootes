@@ -8,5 +8,5 @@ type Props = {
 export default async function NotebookPage(props: Props) {
   const params = await props.params;
 
-  return <Notebook id={parseInt(params.id)} />;
+  return <Notebook id={params.id} />;
 }

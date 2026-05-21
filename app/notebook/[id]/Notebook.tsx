@@ -8,7 +8,7 @@ import html2canvas from "html2canvas-pro";
 import "./notebook.css";
 import parameters from "@/server-parameters.json";
 
-type Props = { id: number };
+type Props = { id: string };
 
 export default function Notebook({ id }: Props) {
   const [notebook, setNotebook] = useState<NotebookType | null>(null);

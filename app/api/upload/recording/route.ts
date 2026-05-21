@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { handleRecording, markNotebookFailed } from "./recording";
 import { prisma } from "@/lib/prisma";
 import { getFileExtension } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body: HandleUploadBody = await request.json();
@@ -15,7 +17,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         pathname: string,
         clientPayload: string | null
       ) => {
-        let clientJson = {};
+        const session = await getServerSession(authOptions);
+        let clientJson: { email?: string; notebookId?: string } = {};
         try {
           clientJson = clientPayload ? JSON.parse(clientPayload) : {};
         } catch (error) {
@@ -25,14 +28,14 @@ export async function POST(request: Request): Promise<NextResponse> {
           );
         }
 
-        const fullPayload = {
-          ...clientJson,
-        };
+        if (!session?.user?.email || session.user.email !== clientJson.email) {
+          throw new Error("Unauthorized");
+        }
 
         return {
           allowedContentTypes: ["audio/*"],
           allowOverwrite: true,
-          tokenPayload: JSON.stringify(fullPayload),
+          tokenPayload: JSON.stringify(clientJson),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
@@ -43,7 +46,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           return;
         }
 
-        let payload: { email: string; notebookId: number };
+        let payload: { email: string; notebookId: string };
         try {
           payload = JSON.parse(tokenPayload);
         } catch (error) {
@@ -94,9 +97,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Upload API error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown upload error" },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Unknown upload error";
+    const status = message === "Unauthorized" ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
